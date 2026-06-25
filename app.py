@@ -347,7 +347,7 @@ def _mqtt():
 # ──────────────────────────────────────────────────────────
 @app.route("/")
 def home():
-    return "<h1>GPS Dashboard Running</h1>"
+    return render_template("dashboard.html")
 
 
 @app.route("/api/latest")
