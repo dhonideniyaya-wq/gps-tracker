@@ -166,65 +166,7 @@ def emit_record(
 # ──────────────────────────────────────────────────────────
 # MQTT Processing
 # ──────────────────────────────────────────────────────────
-    f_lat = round(raw_lat, 6)
-    f_lon = round(raw_lon, 6)
-    f_spd = round(raw_spd, 1)
-
-    beh = behaviour or detect_behaviour(ax, ay, az)
-
-    rec = {
-        "time": datetime.now().strftime("%H:%M:%S"),
-        "device_id": device_id,
-
-        "lat": f_lat,
-        "lon": f_lon,
-
-        "lat_raw": round(raw_lat, 6),
-        "lon_raw": round(raw_lon, 6),
-
-        "speed": f_spd,
-        "altitude": alt,
-
-        "behaviour": beh,
-        "beh_color": BEH_COLOR[beh],
-
-        "accel_x": round(ax, 3),
-        "accel_y": round(ay, 3),
-        "accel_z": round(az, 3),
-
-        # Kalman values
-        "kalman_gain": round(kalman_gain, 3),
-        "uncertainty": round(uncertainty, 3),
-
-        "msg_count": store["count"] + 1,
-    }
-
-    store["latest"] = rec
-    store["count"] += 1
-    store["behaviours"][beh] += 1
-
-    store["history"].append(rec)
-
-    if len(store["history"]) > 80:
-        store["history"].pop(0)
-
-    socketio.emit(
-        "gps_update",
-        {
-            "data": rec,
-            "history": store["history"],
-            "behaviours": store["behaviours"],
-        },
-    )
-
-    print(
-        f"[{rec['time']}] "
-        f"{f_lat}, {f_lon} | "
-        f"{f_spd} km/h | "
-        f"K={kalman_gain:.3f} | "
-        f"P={uncertainty:.3f} | "
-        f"{beh}"
-    )
+  
 
 # ──────────────────────────────────────────────────────────
 # TEST MODE
