@@ -269,15 +269,17 @@ def test_mode_loop():
 # ──────────────────────────────────────────────────────────
 # MQTT Callbacks
 # ──────────────────────────────────────────────────────────
-def on_connect(client, userdata, flags, rc):
-    if rc == 0:
+def on_connect(client, userdata, flags, reason_code, properties):
+    if reason_code == 0:
         store["connected"] = True
+
         print("MQTT Connected")
 
         client.subscribe(MQTT_TOPIC)
+
         print("Subscribed:", MQTT_TOPIC)
     else:
-        print("MQTT Failed:", rc)
+        print("MQTT Failed:", reason_code)
 
 def process_message(payload):
     try:
@@ -305,7 +307,13 @@ def on_message(client, userdata, msg):
     process_message(msg.payload.decode())
 
 
-def on_disconnect(client, userdata, rc):
+def on_disconnect(
+    client,
+    userdata,
+    disconnect_flags,
+    reason_code,
+    properties
+):
     store["connected"] = False
     print("MQTT Disconnected")
 
@@ -315,12 +323,11 @@ def on_disconnect(client, userdata, rc):
 # ──────────────────────────────────────────────────────────
 def start_mqtt():
     try:
-        client = mqtt.Client()
-
-        client.username_pw_set(
-            MQTT_USER,
-            MQTT_PASS
+        client = mqtt.Client(
+            callback_api_version=mqtt.CallbackAPIVersion.VERSION2
         )
+
+        client.username_pw_set(MQTT_USER, MQTT_PASS)
 
         client.tls_set()
 
