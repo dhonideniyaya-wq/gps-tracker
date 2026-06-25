@@ -163,10 +163,34 @@ def emit_record(
     )
 
 
-# ──────────────────────────────────────────────────────────
-# MQTT Processing
-# ──────────────────────────────────────────────────────────
-  
+#MQTT Processing
+
+    store["latest"] = rec
+    store["count"] += 1
+    store["behaviours"][beh] += 1
+
+    store["history"].append(rec)
+
+    if len(store["history"]) > 80:
+        store["history"].pop(0)
+
+    socketio.emit(
+        "gps_update",
+        {
+            "data": rec,
+            "history": store["history"],
+            "behaviours": store["behaviours"],
+        },
+    )
+
+    print(
+        f"[{rec['time']}] "
+        f"{f_lat}, {f_lon} | "
+        f"{f_spd} km/h | "
+        f"K={kalman_gain:.3f} | "
+        f"P={uncertainty:.3f} | "
+        f"{beh}"
+    )
 
 # ──────────────────────────────────────────────────────────
 # TEST MODE
