@@ -1,5 +1,5 @@
-flask
-flask-socketio
-paho-mqtt
-simple-websocket
+Flask
+Flask-SocketIO
 gunicorn
+eventlet
+paho-mqtt
