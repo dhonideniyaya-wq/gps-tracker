@@ -166,19 +166,6 @@ def emit_record(
 # ──────────────────────────────────────────────────────────
 # MQTT Processing
 # ──────────────────────────────────────────────────────────
-def emit_record(
-    raw_lat,
-    raw_lon,
-    raw_spd,
-    alt,
-    ax,
-    ay,
-    az,
-    device_id,
-    kalman_gain=0,
-    uncertainty=0,
-    behaviour=None,
-):
     f_lat = round(raw_lat, 6)
     f_lon = round(raw_lon, 6)
     f_spd = round(raw_spd, 1)
@@ -269,6 +256,9 @@ def test_mode_loop():
 # ──────────────────────────────────────────────────────────
 # MQTT Callbacks
 # ──────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────
+# MQTT Callbacks
+# ──────────────────────────────────────────────────────────
 def on_connect(client, userdata, flags, reason_code, properties):
     if reason_code == 0:
         store["connected"] = True
@@ -281,30 +271,32 @@ def on_connect(client, userdata, flags, reason_code, properties):
     else:
         print("MQTT Failed:", reason_code)
 
+
 def process_message(payload):
     try:
         data = json.loads(payload)
-        gps  = data.get("gps", {})
-        imu  = data.get("imu", {})
+
+        gps = data.get("gps", {})
+        imu = data.get("imu", {})
+
         emit_record(
-            raw_lat   = float(gps.get("lat_raw", gps.get("lat", 6.3553))),
-            raw_lon   = float(gps.get("lon_raw", gps.get("lon", 80.5236))),
-            raw_spd   = float(gps.get("speed", 0)),
-            alt       = float(gps.get("altitude", 12.0)),
-            ax        = float(imu.get("accel_x", 0.01)),
-            ay        = float(imu.get("accel_y", -0.01)),
-            az        = float(imu.get("accel_z", 9.81)),
-            device_id = data.get("device_id", "GROUP2_VEHICLE_01"),
-            behaviour = data.get("behaviour"),
+            raw_lat=float(gps.get("lat_raw", gps.get("lat", 6.3553))),
+            raw_lon=float(gps.get("lon_raw", gps.get("lon", 80.5236))),
+            raw_spd=float(gps.get("speed", 0)),
+            alt=float(gps.get("altitude", 12.0)),
+            ax=float(imu.get("accel_x", 0.01)),
+            ay=float(imu.get("accel_y", -0.01)),
+            az=float(imu.get("accel_z", 9.81)),
+            device_id=data.get("device_id", "GROUP2_VEHICLE_01"),
+            behaviour=data.get("behaviour"),
         )
+
     except Exception as e:
         print(f"Message error: {e}")
 
-def on_message(client, userdata, msg):
-    process_message(msg.payload.decode("utf-8"))
 
 def on_message(client, userdata, msg):
-    process_message(msg.payload.decode())
+    process_message(msg.payload.decode("utf-8"))
 
 
 def on_disconnect(
@@ -312,22 +304,25 @@ def on_disconnect(
     userdata,
     disconnect_flags,
     reason_code,
-    properties
+    properties,
 ):
     store["connected"] = False
     print("MQTT Disconnected")
 
 
 # ──────────────────────────────────────────────────────────
-# Start MQTT
+#  MQTT
 # ──────────────────────────────────────────────────────────
-def start_mqtt():
+def _mqtt():
     try:
         client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2
         )
 
-        client.username_pw_set(MQTT_USER, MQTT_PASS)
+        client.username_pw_set(
+            MQTT_USER,
+            MQTT_PASS
+        )
 
         client.tls_set()
 
@@ -383,7 +378,7 @@ def socket_connected():
 # ──────────────────────────────────────────────────────────
 # Background Thread
 # ──────────────────────────────────────────────────────────
-def start_background():
+def _background():
     if TEST_MODE:
         thread = threading.Thread(
             target=test_mode_loop,
@@ -391,16 +386,19 @@ def start_background():
         )
     else:
         thread = threading.Thread(
-            target=start_mqtt,
+            target=_mqtt,
             daemon=True
         )
 
-    thread.start()
+    thread.()
 
 
-start_background()
+_background()
 
 
+# ──────────────────────────────────────────────────────────
+# Run App (Railway Compatible)
+# ──────────────────────────────────────────────────────────
 # ──────────────────────────────────────────────────────────
 # Run App (Railway Compatible)
 # ──────────────────────────────────────────────────────────
@@ -411,6 +409,6 @@ if __name__ == "__main__":
         app,
         host="0.0.0.0",
         port=port,
-        debug=False
+        debug=False,
+        allow_unsafe_werkzeug=True,
     )
-
