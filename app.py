@@ -390,7 +390,7 @@ def _background():
             daemon=True
         )
 
-    thread.()
+    thread.start()
 
 
 _background()
